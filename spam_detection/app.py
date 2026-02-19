@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
+
 from flask_cors import CORS
 import joblib
 import os
@@ -18,7 +19,8 @@ model = load_model()
 
 @app.route('/')
 def home():
-    return "Spam Detection API is running!"
+    return render_template("index.html")
+
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
@@ -80,4 +82,5 @@ def batch_predict():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
