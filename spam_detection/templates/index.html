@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Detection AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            resize: vertical;
+            min-height: 150px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea::placeholder {
+            color: #999;
+        }
+
+        .character-count {
+            font-size: 0.9em;
+            color: #999;
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-check:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-clear:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            margin-left: 8px;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .result-box.spam {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            border-left-color: #c92a2a;
+            color: white;
+        }
+
+        .result-box.ham {
+            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+            border-left-color: #2b8a3e;
+            color: white;
+        }
+
+        .result-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-confidence {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 12px 0;
+        }
+
+        .result-message {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-style: italic;
+            font-size: 0.95em;
+            word-break: break-word;
+        }
+
+        .probability-bar {
+            margin-top: 12px;
+        }
+
+        .probability-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .bar-container {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .error-message {
+            background: #fee;
+            border-left: 4px solid #c92a2a;
+            color: #c92a2a;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            color: #333;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .info-title {
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .card {
+                padding: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .result-box {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Spam Detector AI</h1>
+            <p>Real-time SMS/Message Classification using Machine Learning</p>
+        </div>
+
+        <div class="card">
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="input-section">
+                <label class="input-label">📝 Enter Your Message</label>
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Paste or type your SMS message here to check if it's spam..."
+                    ></textarea>
+                </div>
+                <div class="character-count">
+                    <span id="charCount">0</span> characters
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-check" id="checkBtn" onclick="checkSpam()">
+                    🔍 Check Message
+                </button>
+                <button class="btn btn-clear" id="clearBtn" onclick="clearForm()">
+                    🗑️ Clear
+                </button>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <div id="resultBox"></div>
+
+                <div class="info-box">
+                    <div class="info-title">ℹ️ How to interpret the results:</div>
+                    <ul style="margin-left: 20px; margin-top: 8px;">
+                        <li><strong>Green (HAM):</strong> This appears to be a legitimate message</li>
+                        <li><strong>Red (SPAM):</strong> This appears to be a spam/phishing message</li>
+                        <li><strong>Confidence:</strong> How certain the AI model is about its prediction</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messageInput = document.getElementById('messageInput');
+        const charCount = document.getElementById('charCount');
+        const checkBtn = document.getElementById('checkBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultSection = document.getElementById('resultSection');
+
+        // Update character count
+        messageInput.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+
+        // Check spam on Enter (Ctrl+Enter)
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                checkSpam();
+            }
+        });
+
+        async function checkSpam() {
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                showError('Please enter a message to check');
+                return;
+            }
+
+            checkBtn.disabled = true;
+            checkBtn.innerHTML = 'Checking<span class="loading"></span>';
+            errorMessage.classList.remove('show');
+
+            try {
+                const response = await fetch('http://localhost:5000/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get prediction from server');
+                }
+
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                showError(`Error: ${error.message}. Make sure the Flask server is running on port 5000.`);
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.innerHTML = '🔍 Check Message';
+            }
+        }
+
+        function displayResult(data) {
+            resultSection.classList.add('show');
+            
+            const isSpam = data.is_spam;
+            const confidence = Math.round(data.confidence);
+            const spamProb = Math.round(data.spam_probability * 100);
+            const hamProb = Math.round(data.ham_probability * 100);
+
+            const resultBox = document.getElementById('resultBox');
+            const boxClass = isSpam ? 'spam' : 'ham';
+            const resultTitle = isSpam ? '⚠️ SPAM DETECTED' : '✅ LEGITIMATE MESSAGE';
+
+            resultBox.innerHTML = `
+                <div class="result-box ${boxClass}">
+                    <div class="result-title">${resultTitle}</div>
+                    <div class="result-confidence">${confidence}%</div>
+                    <div class="result-message">"${data.message}"</div>
+                    
+                    <div class="probability-bar">
+                        <div class="probability-label">
+                            <span>Spam Probability</span>
+                            <span>${spamProb}%</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${spamProb}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="probability-bar">
+                        <div class="probability-label">
+                            <span>Legitimate Probability</span>
+                            <span>${hamProb}%</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${hamProb}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            resultSection.classList.remove('show');
+        }
+
+        function clearForm() {
+            messageInput.value = '';
+            charCount.textContent = '0';
+            resultSection.classList.remove('show');
+            errorMessage.classList.remove('show');
+            messageInput.focus();
+        }
+
+        // Focus on load
+        messageInput.focus();
+    </script>
+</body>
+</html>
